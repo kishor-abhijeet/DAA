@@ -1,116 +1,40 @@
-#include <stdio.h>
-#include <stdlib.h>
+struct set_header
+{
+    int weight;
+    struct set_object *head;     // **Pointer to first node in the list**
+    struct set_object *tail;     // **Pointer to last node in the list**
+};
 
-#define MAX 100
+struct set_object
+{
+    int item;
+    struct set_object *next;     // **Pointer to next element in the list**
+    struct set_header *back;     // **Pointer to the header of the set**
+};
 
-// Structure for each node in the linked list
-typedef struct Node {
-    int data;
-    struct Node* next;
-    struct Set* setPtr;
-} Node;
+void union(struct set_object *a, struct set_object *b)
+{
+    if (a->back->weight < b->back->weight)  // **Compare weights to attach smaller to larger set**
+    {
+        // implementation NOT required
+    }
+    else
+    {
+        // **Attach b's list to end of a's list**
+        a->back->tail->next = b->back->head;
 
-// Structure for the set (linked list)
-typedef struct Set {
-    Node* head;
-    Node* tail;
-    int size;
-} Set;
-
-Node* elements[MAX];  // Array of node pointers
-
-// Function to create a singleton set
-void makeSet(int x) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    Set* newSet = (Set*)malloc(sizeof(Set));
-
-    newNode->data = x;
-    newNode->next = NULL;
-    newNode->setPtr = newSet;
-
-    newSet->head = newNode;
-    newSet->tail = newNode;
-    newSet->size = 1;
-
-    elements[x] = newNode;
-}
-
-// Function to find the representative of the set containing x
-int findSet(int x) {
-    return elements[x]->setPtr->head->data;
-}
-
-// Function to union two sets by size
-void unionSets(int x, int y) {
-    Node* nodeX = elements[x];
-    Node* nodeY = elements[y];
-
-    Set* setX = nodeX->setPtr;
-    Set* setY = nodeY->setPtr;
-
-    if (setX == setY) return;  // Already in the same set
-
-    // **Weighted union: always append the smaller list to the larger one**
-    if (setX->size < setY->size) {
-        // **Traverse setX and update setPtr of each node to point to setY**
-        Node* temp = setX->head;
-        while (temp != NULL) {
-            temp->setPtr = setY;
+        // **Update back pointer of each node in b’s list to point to a's header**
+        struct set_object *temp = b->back->head;
+        while (temp != NULL)
+        {
+            temp->back = a->back;
             temp = temp->next;
         }
 
-        // **Append list X to list Y**
-        setY->tail->next = setX->head;
-        setY->tail = setX->tail;
-        setY->size += setX->size;
+        // **Update tail of the new merged list**
+        a->back->tail = b->back->tail;
 
-        free(setX);  // Free the old set
-    } else {
-        // **Traverse setY and update setPtr of each node to point to setX**
-        Node* temp = setY->head;
-        while (temp != NULL) {
-            temp->setPtr = setX;
-            temp = temp->next;
-        }
-
-        // **Append list Y to list X**
-        setX->tail->next = setY->head;
-        setX->tail = setY->tail;
-        setX->size += setY->size;
-
-        free(setY);  // Free the old set
+        // **Update weight of the merged set**
+        a->back->weight += b->back->weight;
     }
-}
-
-// Function to print the set of an element
-void printSet(int x) {
-    Node* temp = elements[x]->setPtr->head;
-    printf("Set containing %d: ", x);
-    while (temp != NULL) {
-        printf("%d ", temp->data);
-        temp = temp->next;
-    }
-    printf("\n");
-}
-
-// Example usage
-int main() {
-    int i;
-
-    // Create singleton sets
-    for (i = 1; i <= 6; i++) {
-        makeSet(i);
-    }
-
-    unionSets(1, 2);
-    unionSets(3, 4);
-    unionSets(1, 4);
-    unionSets(5, 6);
-    unionSets(1, 5);
-
-    for (i = 1; i <= 6; i++) {
-        printSet(i);
-    }
-
-    return 0;
 }
